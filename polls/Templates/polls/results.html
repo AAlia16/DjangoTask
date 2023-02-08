@@ -1,0 +1,17 @@
+<h1>{{ question.question_text }}</h1>
+
+<ul>
+{% for choice in question.choice_set.all %}
+    <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+{% endfor %}
+</ul>
+
+<a href="{% url 'polls:detail' question.id %}">Vote again?</a>
+
+<footer>
+  <p>FH Dortmund 2023</p>
+    <p>
+        {% load static %}
+    <img width="400" height="200" src="{% static "media/FHDortmundLogo.png" %}" alt="home"/>
+    </p>
+</footer>
