@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.urls import reverse
 from django.utils import timezone
 
@@ -45,6 +45,12 @@ def create_question(question_text, days):
     """
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
+
+def create_choices(question, choice_text):
+    """
+    Create a choice with the given `choice_text` and assign it to the given question.
+    """
+    return question.choice_set.create(choice_text=choice_text)
 
 
 class QuestionIndexViewTests(TestCase):
@@ -125,3 +131,42 @@ class QuestionDetailViewTests(TestCase):
         url = reverse('polls:detail', args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
+
+
+class QuestionResultViewTests(TestCase):
+
+    # Mytest
+    def test_no_result_view_if_question_not_exist(self):
+        """
+        The detail view of a question which does not exist should not be found (Error code 404)
+        """
+        url = reverse('polls:results', args=(2,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    # Mytest
+    def test_error_on_vote_invalid_choices(self):
+        """
+        Error_message: 'You did not select a choice.' is returned in vote method of result view if there is no choice
+        selected.
+        """
+        factory = RequestFactory()
+        past_question = create_question(question_text='Will a choice be selected?.', days=-5)
+        request = factory.post(f'/polls/{past_question.id}/vote/')
+        url = reverse('polls:vote', args=(past_question.id,))
+        response = self.client.post(url)
+        self.assertContains(response, "You did not select a choice.")
+
+    # Mytest
+    def test_voting_for_a_choice(self):
+        """
+        The correct question should be shown in the results view when voting for a choice
+        """
+        factory = RequestFactory()
+        past_question = create_question(question_text='Is this question right?.', days=-5)
+        choice = create_choices(past_question, choice_text='Yes')
+        request = factory.post(f'/polls/{past_question.id}/vote/')
+        url = reverse('polls:vote', args=(past_question.id,))
+        response = self.client.post(url, {'choice': choice.id})
+        self.assertRedirects(response, f'/polls/{past_question.id}/results/')
+
