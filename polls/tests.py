@@ -145,19 +145,6 @@ class QuestionResultViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     # Mytest
-    def test_error_on_vote_invalid_choices(self):
-        """
-        Error_message: 'You did not select a choice.' is returned in vote method of result view if there is no choice
-        selected.
-        """
-        factory = RequestFactory()
-        past_question = create_question(question_text='Will a choice be selected?.', days=-5)
-        request = factory.post(f'/polls/{past_question.id}/vote/')
-        url = reverse('polls:vote', args=(past_question.id,))
-        response = self.client.post(url)
-        self.assertContains(response, "You did not select a choice.")
-
-    # Mytest
     def test_voting_for_a_choice(self):
         """
         The correct question should be shown in the results view when voting for a choice
@@ -170,3 +157,15 @@ class QuestionResultViewTests(TestCase):
         response = self.client.post(url, {'choice': choice.id})
         self.assertRedirects(response, f'/polls/{past_question.id}/results/')
 
+    # Mytest
+    def test_error_on_vote_invalid_choices(self):
+        """
+        Error_message: 'You did not select a choice.' is returned in vote method of result view if there is no choice
+        selected.
+        """
+        factory = RequestFactory()
+        past_question = create_question(question_text='Will a choice be selected?.', days=-5)
+        request = factory.post(f'/polls/{past_question.id}/vote/')
+        url = reverse('polls:vote', args=(past_question.id,))
+        response = self.client.post(url)
+        self.assertContains(response, "You did not select a choice.")
